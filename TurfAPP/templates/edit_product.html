@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Edit Product{% endblock %}
+{% block content %}
+<h2>Edit Product</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <!-- Product Details Form -->
+    <h4>Product Details</h4>
+    {{ product_form.as_p }}
+
+    <!-- Product Images Formset -->
+    <h4>Product Images</h4>
+    <div id="image-upload-container">
+        {{ formset.management_form }}
+        {% for form in formset %}
+            <div class="mb-3 image-form">
+                {{ form.as_p }}
+                <button type="button" class="btn btn-danger btn-sm remove-image">Remove</button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add More Images Button -->
+    <button type="button" class="btn btn-secondary" id="add-more-images">Add More Images</button>
+
+    <!-- Save Changes Button -->
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle dynamically adding new image forms
+    document.getElementById("add-more-images").addEventListener("click", function() {
+        let container = document.getElementById("image-upload-container");
+        let formCount = parseInt(document.getElementById("id_form-TOTAL_FORMS").value);
+        let newForm = container.children[0].cloneNode(true);
+
+        // Clear inputs in the cloned form
+        let inputs = newForm.querySelectorAll("input, textarea");
+        inputs.forEach(input => {
+            input.value = "";
+            if (input.type === "checkbox") input.checked = false;
+        });
+
+        // Update the form index for the cloned form
+        newForm.innerHTML = newForm.innerHTML.replace(/form-\d+/g, `form-${formCount}`);
+        container.appendChild(newForm);
+
+        // Increment the total forms count
+        document.getElementById("id_form-TOTAL_FORMS").value = formCount + 1;
+    });
+
+    // Handle removing image forms
+    document.getElementById("image-upload-container").addEventListener("click", function(event) {
+        if (event.target.classList.contains("remove-image")) {
+            let form = event.target.closest(".image-form");
+            if (form) {
+                form.style.display = "none";
+                let deleteInput = form.querySelector('input[type="checkbox"][name*="DELETE"]');
+                if (deleteInput) deleteInput.checked = true; // Mark form for deletion
+            }
+        }
+    });
+</script>
+{% endblock %}
